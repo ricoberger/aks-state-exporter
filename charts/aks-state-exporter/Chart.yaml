@@ -1,6 +1,7 @@
+---
 apiVersion: v2
 name: aks-state-exporter
 description: Prometheus exporter for the provisioning state of an AKS cluster
 type: application
-version: 0.1.0
+version: 1.0.0
 appVersion: 0.1.0

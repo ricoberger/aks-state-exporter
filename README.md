@@ -26,8 +26,7 @@ docker run --rm -it --name aks-state-exporter -p 8080:8080 -v $(pwd)/tmp:/aks-st
 The exporter can also be deployed on Kubernetes via Helm:
 
 ```sh
-helm repo add ricoberger https://ricoberger.github.io/helm-charts
-helm install aks-state-exporter ricoberger/aks-state-exporter
+helm upgrade --install aks-state-exporter oci://ghcr.io/ricoberger/charts/aks-state-exporter --version 1.0.0
 ```
 
 ## Metrics
