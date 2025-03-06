@@ -32,12 +32,12 @@ helm upgrade --install aks-state-exporter oci://ghcr.io/ricoberger/charts/aks-st
 ## Metrics
 
 ```txt
-# HELP aks_cluster_provisioning_state The provisioning state of the cluster (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting)
+# HELP aks_cluster_provisioning_state The provisioning state of the cluster (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)
 # TYPE aks_cluster_provisioning_state gauge
 aks_cluster_provisioning_state{name="dev-de1",resource_group="dev-de1"} 1
 aks_cluster_provisioning_state{name="prod-de1",resource_group="prod-de1"} 1
 aks_cluster_provisioning_state{name="stage-de1",resource_group="stage-de1"} 1
-# HELP aks_nodepool_provisioning_state The provisioning state of the node pool (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting)
+# HELP aks_nodepool_provisioning_state The provisioning state of the node pool (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)
 # TYPE aks_nodepool_provisioning_state gauge
 aks_nodepool_provisioning_state{cluster="dev-de1",name="system",resource_group="dev-de1"} 1
 aks_nodepool_provisioning_state{cluster="dev-de1",name="zone1",resource_group="dev-de1"} 1

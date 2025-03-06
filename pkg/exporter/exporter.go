@@ -31,8 +31,8 @@ func New(config Config) (*Exporter, error) {
 
 	return &Exporter{
 		aksClient:                 aksClient,
-		ClusterProvisioningState:  prometheus.NewDesc("aks_cluster_provisioning_state", "The provisioning state of the cluster (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting)", []string{"name", "resource_group"}, nil),
-		NodePoolProvisioningState: prometheus.NewDesc("aks_nodepool_provisioning_state", "The provisioning state of the node pool (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting)", []string{"name", "cluster", "resource_group"}, nil),
+		ClusterProvisioningState:  prometheus.NewDesc("aks_cluster_provisioning_state", "The provisioning state of the cluster (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)", []string{"name", "resource_group"}, nil),
+		NodePoolProvisioningState: prometheus.NewDesc("aks_nodepool_provisioning_state", "The provisioning state of the node pool (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)", []string{"name", "cluster", "resource_group"}, nil),
 	}, nil
 }
 
@@ -96,6 +96,12 @@ func provisioningStateToFloat64(state string) float64 {
 		return 5
 	case "Deleting":
 		return 6
+	case "Upgrading":
+		return 7
+	case "UpgradingNodeImageVersion":
+		return 8
+	case "ReconcilingClusterETCDCertificates":
+		return 9
 	default:
 		return 0
 	}
