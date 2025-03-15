@@ -1,13 +1,12 @@
 module github.com/ricoberger/aks-state-exporter
 
 go 1.24.0
-
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.17.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.8.2
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice v1.0.0
-	github.com/alecthomas/kong v1.8.1
-	github.com/prometheus/client_golang v1.21.0
+	github.com/alecthomas/kong v1.9.0
+	github.com/prometheus/client_golang v1.21.1
 	github.com/stretchr/testify v1.10.0
 	sigs.k8s.io/yaml v1.4.0
 )
