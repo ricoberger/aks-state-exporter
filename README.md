@@ -19,8 +19,8 @@ Via Docker the following commands can be used to build the image and run the
 exporter:
 
 ```sh
-docker build -f ./Dockerfile -t ghcr.io/ricoberger/aks-state-exporter:dev .
-docker run --rm -it --name aks-state-exporter -p 8080:8080 -v $(pwd)/tmp:/aks-state-exporter/config ghcr.io/ricoberger/aks-state-exporter:dev --config=/aks-state-exporter/config/config.yaml
+docker build -f ./Dockerfile -t ghcr.io/ricoberger/aks-state-exporter:latest .
+docker run --rm -it --name aks-state-exporter -p 8080:8080 -v $(pwd)/tmp:/aks-state-exporter/config ghcr.io/ricoberger/aks-state-exporter:latest --config=/aks-state-exporter/config/config.yaml
 ```
 
 The exporter can also be deployed on Kubernetes via Helm:
