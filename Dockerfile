@@ -1,4 +1,4 @@
-FROM golang:1.24.1 AS build
+FROM golang:1.24.2 AS build
 WORKDIR /aks-state-exporter
 COPY go.mod go.sum /aks-state-exporter/
 RUN go mod download
