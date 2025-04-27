@@ -31,5 +31,5 @@ func Load[T any](file string, config T) (T, error) {
 // should contain a `$` it can be escaped via `$$`.
 func expandEnv(s string) string {
 	os.Setenv("CRANE_DOLLAR", "$")
-	return os.ExpandEnv(strings.Replace(s, "$$", "${CRANE_DOLLAR}", -1))
+	return os.ExpandEnv(strings.ReplaceAll(s, "$$", "${CRANE_DOLLAR}"))
 }
