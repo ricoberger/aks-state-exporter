@@ -107,6 +107,9 @@ func NewClient(config Config) (Client, error) {
 	}
 
 	agentPoolsClient, err := armcontainerservice.NewAgentPoolsClient(config.Credentials.SubscriptionID, credentials, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
 
 	return &client{
 		subscriptionID:        config.Credentials.SubscriptionID,
