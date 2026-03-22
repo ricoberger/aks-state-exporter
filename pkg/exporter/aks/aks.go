@@ -18,7 +18,8 @@ type Credentials struct {
 	SubscriptionID string `json:"subscriptionID"`
 	TenantID       string `json:"tenantID"`
 	ClientID       string `json:"clientID"`
-	ClientSecret   string `json:"clientSecret"`
+	//nolint:gosec
+	ClientSecret string `json:"clientSecret"`
 }
 
 type Cluster struct {
