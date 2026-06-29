@@ -37,6 +37,7 @@ helm upgrade --install aks-state-exporter oci://ghcr.io/ricoberger/charts/aks-st
 aks_cluster_provisioning_state{name="dev-de1",resource_group="dev-de1"} 1
 aks_cluster_provisioning_state{name="prod-de1",resource_group="prod-de1"} 1
 aks_cluster_provisioning_state{name="stage-de1",resource_group="stage-de1"} 1
+
 # HELP aks_nodepool_provisioning_state The provisioning state of the node pool (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)
 # TYPE aks_nodepool_provisioning_state gauge
 aks_nodepool_provisioning_state{cluster="dev-de1",name="system",resource_group="dev-de1"} 1
@@ -51,4 +52,19 @@ aks_nodepool_provisioning_state{cluster="stage-de1",name="system",resource_group
 aks_nodepool_provisioning_state{cluster="stage-de1",name="zone1",resource_group="stage-de1"} 1
 aks_nodepool_provisioning_state{cluster="stage-de1",name="zone2",resource_group="stage-de1"} 1
 aks_nodepool_provisioning_state{cluster="stage-de1",name="zone3",resource_group="stage-de1"} 1
+
+# HELP aks_nodepool_count The number of nodes in the node pool
+# TYPE aks_nodepool_count gauge
+aks_nodepool_count{cluster="dev-de1",name="system",resource_group="dev-de1"} 3
+aks_nodepool_count{cluster="dev-de1",name="zone1",resource_group="dev-de1"} 1
+
+# HELP aks_nodepool_max_count The maximum number of nodes in the node pool
+# TYPE aks_nodepool_max_count gauge
+aks_nodepool_max_count{cluster="dev-de1",name="system",resource_group="dev-de1"} 0
+aks_nodepool_max_count{cluster="dev-de1",name="zone1",resource_group="dev-de1"} 8
+
+# HELP aks_nodepool_min_count The minimum number of nodes in the node pool
+# TYPE aks_nodepool_min_count gauge
+aks_nodepool_min_count{cluster="dev-de1",name="system",resource_group="dev-de1"} 0
+aks_nodepool_min_count{cluster="dev-de1",name="zone1",resource_group="dev-de1"} 1
 ```

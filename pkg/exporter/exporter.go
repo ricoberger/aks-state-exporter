@@ -19,6 +19,9 @@ type Exporter struct {
 	aksClient                 aks.Client
 	ClusterProvisioningState  *prometheus.Desc
 	NodePoolProvisioningState *prometheus.Desc
+	NodePoolCount             *prometheus.Desc
+	NodePoolMinCount          *prometheus.Desc
+	NodePoolMaxCount          *prometheus.Desc
 }
 
 // New returns a new `Exporter` which can be passed to the
@@ -33,6 +36,9 @@ func New(config Config) (*Exporter, error) {
 		aksClient:                 aksClient,
 		ClusterProvisioningState:  prometheus.NewDesc("aks_cluster_provisioning_state", "The provisioning state of the cluster (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)", []string{"name", "resource_group"}, nil),
 		NodePoolProvisioningState: prometheus.NewDesc("aks_nodepool_provisioning_state", "The provisioning state of the node pool (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)", []string{"name", "cluster", "resource_group"}, nil),
+		NodePoolCount:             prometheus.NewDesc("aks_nodepool_count", "The number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
+		NodePoolMinCount:          prometheus.NewDesc("aks_nodepool_min_count", "The minimum number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
+		NodePoolMaxCount:          prometheus.NewDesc("aks_nodepool_max_count", "The maximum number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
 	}, nil
 }
 
@@ -76,8 +82,11 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		slog.Debug("Collecting metrics for node pools", slog.String("cluster", cluster.Name), slog.String("resource_group", cluster.ResourceGroup), slog.Int("count", len(nodePools)))
 
 		for _, nodePool := range nodePools {
-			slog.Debug("Collecting metrics for node pool", slog.String("name", nodePool.Name), slog.String("cluster", nodePool.Cluster), slog.String("resource_group", nodePool.ResourceGroup), slog.String("provisioning_state", nodePool.ProvisioningState))
+			slog.Debug("Collecting metrics for node pool", slog.String("name", nodePool.Name), slog.String("cluster", nodePool.Cluster), slog.String("resource_group", nodePool.ResourceGroup), slog.String("provisioning_state", nodePool.ProvisioningState), slog.Int("count", int(nodePool.Count)), slog.Int("min_count", int(nodePool.MinCount)), slog.Int("max_count", int(nodePool.MaxCount)))
 			ch <- prometheus.MustNewConstMetric(e.NodePoolProvisioningState, prometheus.GaugeValue, provisioningStateToFloat64(nodePool.ProvisioningState), nodePool.Name, nodePool.Cluster, nodePool.ResourceGroup)
+			ch <- prometheus.MustNewConstMetric(e.NodePoolCount, prometheus.GaugeValue, float64(nodePool.Count), nodePool.Name, nodePool.Cluster, nodePool.ResourceGroup)
+			ch <- prometheus.MustNewConstMetric(e.NodePoolMinCount, prometheus.GaugeValue, float64(nodePool.MinCount), nodePool.Name, nodePool.Cluster, nodePool.ResourceGroup)
+			ch <- prometheus.MustNewConstMetric(e.NodePoolMaxCount, prometheus.GaugeValue, float64(nodePool.MaxCount), nodePool.Name, nodePool.Cluster, nodePool.ResourceGroup)
 		}
 	}
 }
