@@ -33,6 +33,9 @@ type NodePool struct {
 	Cluster           string
 	ResourceGroup     string
 	ProvisioningState string
+	Count             int32
+	MinCount          int32
+	MaxCount          int32
 }
 
 type Client interface {
@@ -84,12 +87,37 @@ func (c *client) GetNodePools(ctx context.Context, clusterName string, resourceG
 		}
 
 		for _, nodePool := range page.Value {
-			nodePools = append(nodePools, NodePool{
-				Name:              *nodePool.Name,
-				Cluster:           clusterName,
-				ResourceGroup:     resourceGroup,
-				ProvisioningState: *nodePool.Properties.ProvisioningState,
-			})
+			if nodePool != nil && nodePool.Properties != nil && nodePool.Name != nil {
+				provisioningState := ""
+				if nodePool.Properties.ProvisioningState != nil {
+					provisioningState = *nodePool.Properties.ProvisioningState
+				}
+
+				count := int32(0)
+				if nodePool.Properties.Count != nil {
+					count = *nodePool.Properties.Count
+				}
+
+				minCount := int32(0)
+				if nodePool.Properties.MinCount != nil {
+					minCount = *nodePool.Properties.MinCount
+				}
+
+				maxCount := int32(0)
+				if nodePool.Properties.MaxCount != nil {
+					maxCount = *nodePool.Properties.MaxCount
+				}
+
+				nodePools = append(nodePools, NodePool{
+					Name:              *nodePool.Name,
+					Cluster:           clusterName,
+					ResourceGroup:     resourceGroup,
+					ProvisioningState: provisioningState,
+					Count:             count,
+					MinCount:          minCount,
+					MaxCount:          maxCount,
+				})
+			}
 		}
 	}
 
