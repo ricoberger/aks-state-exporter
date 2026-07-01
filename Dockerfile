@@ -5,7 +5,7 @@ RUN go mod download
 COPY . .
 RUN export CGO_ENABLED=0 && make build
 
-FROM alpine:3.23.4
+FROM alpine:3.24.1
 RUN apk update && apk add --no-cache ca-certificates
 RUN mkdir /aks-state-exporter
 COPY --from=build /aks-state-exporter/bin/aks-state-exporter /aks-state-exporter
