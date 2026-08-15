@@ -49,6 +49,7 @@ type NodePool struct {
 	CurrentOrchestratorVersion string
 	NodeImageVersion           string
 	ScaleSetPriority           string
+	AutoScalingEnabled         bool
 }
 
 type Client interface {
@@ -233,6 +234,11 @@ func mapNodePool(nodePool *armcontainerservice.AgentPool, clusterName string, re
 		scaleSetPriority = string(*nodePool.Properties.ScaleSetPriority)
 	}
 
+	autoScalingEnabled := false
+	if nodePool.Properties.EnableAutoScaling != nil {
+		autoScalingEnabled = *nodePool.Properties.EnableAutoScaling
+	}
+
 	return NodePool{
 		Name:                       *nodePool.Name,
 		Cluster:                    clusterName,
@@ -249,6 +255,7 @@ func mapNodePool(nodePool *armcontainerservice.AgentPool, clusterName string, re
 		CurrentOrchestratorVersion: currentOrchestratorVersion,
 		NodeImageVersion:           nodeImageVersion,
 		ScaleSetPriority:           scaleSetPriority,
+		AutoScalingEnabled:         autoScalingEnabled,
 	}, true
 }
 

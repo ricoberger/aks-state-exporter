@@ -82,6 +82,7 @@ func TestMapNodePool(t *testing.T) {
 				CurrentOrchestratorVersion: to.Ptr("1.35.4"),
 				NodeImageVersion:           to.Ptr("AKSUbuntu-2404gen2containerd-202607.29.0"),
 				ScaleSetPriority:           to.Ptr(armcontainerservice.ScaleSetPriorityRegular),
+				EnableAutoScaling:          to.Ptr(true),
 			},
 		}
 
@@ -103,6 +104,7 @@ func TestMapNodePool(t *testing.T) {
 			CurrentOrchestratorVersion: "1.35.4",
 			NodeImageVersion:           "AKSUbuntu-2404gen2containerd-202607.29.0",
 			ScaleSetPriority:           "Regular",
+			AutoScalingEnabled:         true,
 		}, mapped)
 	})
 
