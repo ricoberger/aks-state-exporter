@@ -1,0 +1,11 @@
+exporter:
+  aks:
+    credentials:
+      subscriptionID: $AZURE_SUBSCRIPTION_ID
+      tenantID: $AZURE_TENANT_ID
+      clientID: $AZURE_CLIENT_ID
+      clientSecret: $AZURE_CLIENT_SECRET
+    resourceGroups:
+      - dev-de1
+      - stage-de1
+      - prod-de1
