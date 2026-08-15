@@ -76,54 +76,67 @@ func (c *client) GetClusters(ctx context.Context) ([]Cluster, error) {
 			}
 
 			for _, cluster := range page.Value {
-				if cluster == nil || cluster.Name == nil {
+				mapped, ok := mapCluster(cluster, resourceGroup)
+				if !ok {
 					continue
 				}
 
-				provisioningState := ""
-				kubernetesVersion := ""
-				currentKubernetesVersion := ""
-				powerState := ""
-				if cluster.Properties != nil {
-					if cluster.Properties.ProvisioningState != nil {
-						provisioningState = *cluster.Properties.ProvisioningState
-					}
-					if cluster.Properties.KubernetesVersion != nil {
-						kubernetesVersion = *cluster.Properties.KubernetesVersion
-					}
-					if cluster.Properties.CurrentKubernetesVersion != nil {
-						currentKubernetesVersion = *cluster.Properties.CurrentKubernetesVersion
-					}
-					if cluster.Properties.PowerState != nil && cluster.Properties.PowerState.Code != nil {
-						powerState = string(*cluster.Properties.PowerState.Code)
-					}
-				}
-
-				location := ""
-				if cluster.Location != nil {
-					location = *cluster.Location
-				}
-
-				skuTier := ""
-				if cluster.SKU != nil && cluster.SKU.Tier != nil {
-					skuTier = string(*cluster.SKU.Tier)
-				}
-
-				clusters = append(clusters, Cluster{
-					Name:                     *cluster.Name,
-					ResourceGroup:            resourceGroup,
-					ProvisioningState:        provisioningState,
-					Location:                 location,
-					KubernetesVersion:        kubernetesVersion,
-					CurrentKubernetesVersion: currentKubernetesVersion,
-					SKUTier:                  skuTier,
-					PowerState:               powerState,
-				})
+				clusters = append(clusters, mapped)
 			}
 		}
 	}
 
 	return clusters, nil
+}
+
+// mapCluster converts an Azure `ManagedCluster` into the internal `Cluster`
+// representation. It returns false when the cluster cannot be mapped (the
+// element or its name is nil), in which case the cluster should be skipped. Any
+// other nil pointer is mapped to an empty string.
+func mapCluster(cluster *armcontainerservice.ManagedCluster, resourceGroup string) (Cluster, bool) {
+	if cluster == nil || cluster.Name == nil {
+		return Cluster{}, false
+	}
+
+	provisioningState := ""
+	kubernetesVersion := ""
+	currentKubernetesVersion := ""
+	powerState := ""
+	if cluster.Properties != nil {
+		if cluster.Properties.ProvisioningState != nil {
+			provisioningState = *cluster.Properties.ProvisioningState
+		}
+		if cluster.Properties.KubernetesVersion != nil {
+			kubernetesVersion = *cluster.Properties.KubernetesVersion
+		}
+		if cluster.Properties.CurrentKubernetesVersion != nil {
+			currentKubernetesVersion = *cluster.Properties.CurrentKubernetesVersion
+		}
+		if cluster.Properties.PowerState != nil && cluster.Properties.PowerState.Code != nil {
+			powerState = string(*cluster.Properties.PowerState.Code)
+		}
+	}
+
+	location := ""
+	if cluster.Location != nil {
+		location = *cluster.Location
+	}
+
+	skuTier := ""
+	if cluster.SKU != nil && cluster.SKU.Tier != nil {
+		skuTier = string(*cluster.SKU.Tier)
+	}
+
+	return Cluster{
+		Name:                     *cluster.Name,
+		ResourceGroup:            resourceGroup,
+		ProvisioningState:        provisioningState,
+		Location:                 location,
+		KubernetesVersion:        kubernetesVersion,
+		CurrentKubernetesVersion: currentKubernetesVersion,
+		SKUTier:                  skuTier,
+		PowerState:               powerState,
+	}, true
 }
 
 func (c *client) GetNodePools(ctx context.Context, clusterName string, resourceGroup string) ([]NodePool, error) {
@@ -138,89 +151,105 @@ func (c *client) GetNodePools(ctx context.Context, clusterName string, resourceG
 		}
 
 		for _, nodePool := range page.Value {
-			if nodePool != nil && nodePool.Properties != nil && nodePool.Name != nil {
-				provisioningState := ""
-				if nodePool.Properties.ProvisioningState != nil {
-					provisioningState = *nodePool.Properties.ProvisioningState
-				}
-
-				count := int32(0)
-				if nodePool.Properties.Count != nil {
-					count = *nodePool.Properties.Count
-				}
-
-				minCount := int32(0)
-				if nodePool.Properties.MinCount != nil {
-					minCount = *nodePool.Properties.MinCount
-				}
-
-				maxCount := int32(0)
-				if nodePool.Properties.MaxCount != nil {
-					maxCount = *nodePool.Properties.MaxCount
-				}
-
-				vmSize := ""
-				if nodePool.Properties.VMSize != nil {
-					vmSize = *nodePool.Properties.VMSize
-				}
-
-				osType := ""
-				if nodePool.Properties.OSType != nil {
-					osType = string(*nodePool.Properties.OSType)
-				}
-
-				osSKU := ""
-				if nodePool.Properties.OSSKU != nil {
-					osSKU = string(*nodePool.Properties.OSSKU)
-				}
-
-				mode := ""
-				if nodePool.Properties.Mode != nil {
-					mode = string(*nodePool.Properties.Mode)
-				}
-
-				orchestratorVersion := ""
-				if nodePool.Properties.OrchestratorVersion != nil {
-					orchestratorVersion = *nodePool.Properties.OrchestratorVersion
-				}
-
-				currentOrchestratorVersion := ""
-				if nodePool.Properties.CurrentOrchestratorVersion != nil {
-					currentOrchestratorVersion = *nodePool.Properties.CurrentOrchestratorVersion
-				}
-
-				nodeImageVersion := ""
-				if nodePool.Properties.NodeImageVersion != nil {
-					nodeImageVersion = *nodePool.Properties.NodeImageVersion
-				}
-
-				scaleSetPriority := ""
-				if nodePool.Properties.ScaleSetPriority != nil {
-					scaleSetPriority = string(*nodePool.Properties.ScaleSetPriority)
-				}
-
-				nodePools = append(nodePools, NodePool{
-					Name:                       *nodePool.Name,
-					Cluster:                    clusterName,
-					ResourceGroup:              resourceGroup,
-					ProvisioningState:          provisioningState,
-					Count:                      count,
-					MinCount:                   minCount,
-					MaxCount:                   maxCount,
-					VMSize:                     vmSize,
-					OSType:                     osType,
-					OSSKU:                      osSKU,
-					Mode:                       mode,
-					OrchestratorVersion:        orchestratorVersion,
-					CurrentOrchestratorVersion: currentOrchestratorVersion,
-					NodeImageVersion:           nodeImageVersion,
-					ScaleSetPriority:           scaleSetPriority,
-				})
+			mapped, ok := mapNodePool(nodePool, clusterName, resourceGroup)
+			if !ok {
+				continue
 			}
+
+			nodePools = append(nodePools, mapped)
 		}
 	}
 
 	return nodePools, nil
+}
+
+// mapNodePool converts an Azure `AgentPool` into the internal `NodePool`
+// representation. It returns false when the node pool cannot be mapped (the
+// element, its properties or its name is nil), in which case the node pool
+// should be skipped. Any other nil pointer is mapped to an empty string or a
+// zero count.
+func mapNodePool(nodePool *armcontainerservice.AgentPool, clusterName string, resourceGroup string) (NodePool, bool) {
+	if nodePool == nil || nodePool.Properties == nil || nodePool.Name == nil {
+		return NodePool{}, false
+	}
+
+	provisioningState := ""
+	if nodePool.Properties.ProvisioningState != nil {
+		provisioningState = *nodePool.Properties.ProvisioningState
+	}
+
+	count := int32(0)
+	if nodePool.Properties.Count != nil {
+		count = *nodePool.Properties.Count
+	}
+
+	minCount := int32(0)
+	if nodePool.Properties.MinCount != nil {
+		minCount = *nodePool.Properties.MinCount
+	}
+
+	maxCount := int32(0)
+	if nodePool.Properties.MaxCount != nil {
+		maxCount = *nodePool.Properties.MaxCount
+	}
+
+	vmSize := ""
+	if nodePool.Properties.VMSize != nil {
+		vmSize = *nodePool.Properties.VMSize
+	}
+
+	osType := ""
+	if nodePool.Properties.OSType != nil {
+		osType = string(*nodePool.Properties.OSType)
+	}
+
+	osSKU := ""
+	if nodePool.Properties.OSSKU != nil {
+		osSKU = string(*nodePool.Properties.OSSKU)
+	}
+
+	mode := ""
+	if nodePool.Properties.Mode != nil {
+		mode = string(*nodePool.Properties.Mode)
+	}
+
+	orchestratorVersion := ""
+	if nodePool.Properties.OrchestratorVersion != nil {
+		orchestratorVersion = *nodePool.Properties.OrchestratorVersion
+	}
+
+	currentOrchestratorVersion := ""
+	if nodePool.Properties.CurrentOrchestratorVersion != nil {
+		currentOrchestratorVersion = *nodePool.Properties.CurrentOrchestratorVersion
+	}
+
+	nodeImageVersion := ""
+	if nodePool.Properties.NodeImageVersion != nil {
+		nodeImageVersion = *nodePool.Properties.NodeImageVersion
+	}
+
+	scaleSetPriority := ""
+	if nodePool.Properties.ScaleSetPriority != nil {
+		scaleSetPriority = string(*nodePool.Properties.ScaleSetPriority)
+	}
+
+	return NodePool{
+		Name:                       *nodePool.Name,
+		Cluster:                    clusterName,
+		ResourceGroup:              resourceGroup,
+		ProvisioningState:          provisioningState,
+		Count:                      count,
+		MinCount:                   minCount,
+		MaxCount:                   maxCount,
+		VMSize:                     vmSize,
+		OSType:                     osType,
+		OSSKU:                      osSKU,
+		Mode:                       mode,
+		OrchestratorVersion:        orchestratorVersion,
+		CurrentOrchestratorVersion: currentOrchestratorVersion,
+		NodeImageVersion:           nodeImageVersion,
+		ScaleSetPriority:           scaleSetPriority,
+	}, true
 }
 
 func NewClient(config Config) (Client, error) {

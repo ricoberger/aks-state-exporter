@@ -34,6 +34,13 @@ func New(config Config) (*Exporter, error) {
 		return nil, err
 	}
 
+	return newExporter(aksClient), nil
+}
+
+// newExporter creates an `Exporter` for the provided `aks.Client`. It is
+// separated from `New` so the exporter can be constructed with a fake client in
+// tests without requiring valid Azure credentials.
+func newExporter(aksClient aks.Client) *Exporter {
 	return &Exporter{
 		aksClient:                 aksClient,
 		ClusterProvisioningState:  prometheus.NewDesc("aks_cluster_provisioning_state", "The provisioning state of the cluster (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)", []string{"name", "resource_group"}, nil),
@@ -43,7 +50,7 @@ func New(config Config) (*Exporter, error) {
 		NodePoolCount:             prometheus.NewDesc("aks_nodepool_count", "The number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
 		NodePoolMinCount:          prometheus.NewDesc("aks_nodepool_min_count", "The minimum number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
 		NodePoolMaxCount:          prometheus.NewDesc("aks_nodepool_max_count", "The maximum number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
-	}, nil
+	}
 }
 
 // Describe sends the super-set of all possible descriptors of metrics collected
