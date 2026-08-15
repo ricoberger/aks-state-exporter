@@ -32,6 +32,14 @@ helm upgrade --install aks-state-exporter oci://ghcr.io/ricoberger/charts/aks-st
 ## Metrics
 
 ```txt
+# HELP aks_cluster_info Information about the cluster as labels, the value is always 1
+# TYPE aks_cluster_info gauge
+aks_cluster_info{current_kubernetes_version="1.35.5",kubernetes_version="1.35.5",location="germanywestcentral",name="dev-de1",power_state="Running",provisioning_state="Succeeded",resource_group="dev-de1",sku_tier="Paid"} 1
+
+# HELP aks_nodepool_info Information about the node pool as labels, the value is always 1
+# TYPE aks_nodepool_info gauge
+aks_nodepool_info{cluster="dev-de1",current_orchestrator_version="1.35.5",mode="System",name="system",node_image_version="AKSUbuntu-2404gen2containerd-202607.29.0",orchestrator_version="1.35.5",os_sku="Ubuntu",os_type="Linux",provisioning_state="Succeeded",resource_group="dev-de1",scale_set_priority="",vm_size="Standard_D16ds_v5"} 1
+
 # HELP aks_cluster_provisioning_state The provisioning state of the cluster (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)
 # TYPE aks_cluster_provisioning_state gauge
 aks_cluster_provisioning_state{name="dev-de1",resource_group="dev-de1"} 1

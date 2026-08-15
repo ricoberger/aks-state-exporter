@@ -18,7 +18,9 @@ type Config struct {
 type Exporter struct {
 	aksClient                 aks.Client
 	ClusterProvisioningState  *prometheus.Desc
+	ClusterInfo               *prometheus.Desc
 	NodePoolProvisioningState *prometheus.Desc
+	NodePoolInfo              *prometheus.Desc
 	NodePoolCount             *prometheus.Desc
 	NodePoolMinCount          *prometheus.Desc
 	NodePoolMaxCount          *prometheus.Desc
@@ -35,7 +37,9 @@ func New(config Config) (*Exporter, error) {
 	return &Exporter{
 		aksClient:                 aksClient,
 		ClusterProvisioningState:  prometheus.NewDesc("aks_cluster_provisioning_state", "The provisioning state of the cluster (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)", []string{"name", "resource_group"}, nil),
+		ClusterInfo:               prometheus.NewDesc("aks_cluster_info", "Information about the cluster as labels, the value is always 1", []string{"name", "resource_group", "location", "kubernetes_version", "current_kubernetes_version", "sku_tier", "power_state", "provisioning_state"}, nil),
 		NodePoolProvisioningState: prometheus.NewDesc("aks_nodepool_provisioning_state", "The provisioning state of the node pool (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)", []string{"name", "cluster", "resource_group"}, nil),
+		NodePoolInfo:              prometheus.NewDesc("aks_nodepool_info", "Information about the node pool as labels, the value is always 1", []string{"name", "cluster", "resource_group", "vm_size", "os_type", "os_sku", "mode", "orchestrator_version", "current_orchestrator_version", "node_image_version", "scale_set_priority", "provisioning_state"}, nil),
 		NodePoolCount:             prometheus.NewDesc("aks_nodepool_count", "The number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
 		NodePoolMinCount:          prometheus.NewDesc("aks_nodepool_min_count", "The minimum number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
 		NodePoolMaxCount:          prometheus.NewDesc("aks_nodepool_max_count", "The maximum number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
@@ -48,7 +52,12 @@ func New(config Config) (*Exporter, error) {
 // uniqueness requirements described in the Desc documentation.
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- e.ClusterProvisioningState
+	ch <- e.ClusterInfo
 	ch <- e.NodePoolProvisioningState
+	ch <- e.NodePoolInfo
+	ch <- e.NodePoolCount
+	ch <- e.NodePoolMinCount
+	ch <- e.NodePoolMaxCount
 }
 
 // Collect is called by the Prometheus registry when collecting metrics. The
@@ -72,6 +81,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	for _, cluster := range clusters {
 		slog.Debug("Collecting metrics for cluster", slog.String("name", cluster.Name), slog.String("resource_group", cluster.ResourceGroup), slog.String("provisioning_state", cluster.ProvisioningState))
 		ch <- prometheus.MustNewConstMetric(e.ClusterProvisioningState, prometheus.GaugeValue, provisioningStateToFloat64(cluster.ProvisioningState), cluster.Name, cluster.ResourceGroup)
+		ch <- prometheus.MustNewConstMetric(e.ClusterInfo, prometheus.GaugeValue, 1, cluster.Name, cluster.ResourceGroup, cluster.Location, cluster.KubernetesVersion, cluster.CurrentKubernetesVersion, cluster.SKUTier, cluster.PowerState, cluster.ProvisioningState)
 
 		nodePools, err := e.aksClient.GetNodePools(ctx, cluster.Name, cluster.ResourceGroup)
 		if err != nil {
@@ -84,6 +94,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		for _, nodePool := range nodePools {
 			slog.Debug("Collecting metrics for node pool", slog.String("name", nodePool.Name), slog.String("cluster", nodePool.Cluster), slog.String("resource_group", nodePool.ResourceGroup), slog.String("provisioning_state", nodePool.ProvisioningState), slog.Int("count", int(nodePool.Count)), slog.Int("min_count", int(nodePool.MinCount)), slog.Int("max_count", int(nodePool.MaxCount)))
 			ch <- prometheus.MustNewConstMetric(e.NodePoolProvisioningState, prometheus.GaugeValue, provisioningStateToFloat64(nodePool.ProvisioningState), nodePool.Name, nodePool.Cluster, nodePool.ResourceGroup)
+			ch <- prometheus.MustNewConstMetric(e.NodePoolInfo, prometheus.GaugeValue, 1, nodePool.Name, nodePool.Cluster, nodePool.ResourceGroup, nodePool.VMSize, nodePool.OSType, nodePool.OSSKU, nodePool.Mode, nodePool.OrchestratorVersion, nodePool.CurrentOrchestratorVersion, nodePool.NodeImageVersion, nodePool.ScaleSetPriority, nodePool.ProvisioningState)
 			ch <- prometheus.MustNewConstMetric(e.NodePoolCount, prometheus.GaugeValue, float64(nodePool.Count), nodePool.Name, nodePool.Cluster, nodePool.ResourceGroup)
 			ch <- prometheus.MustNewConstMetric(e.NodePoolMinCount, prometheus.GaugeValue, float64(nodePool.MinCount), nodePool.Name, nodePool.Cluster, nodePool.ResourceGroup)
 			ch <- prometheus.MustNewConstMetric(e.NodePoolMaxCount, prometheus.GaugeValue, float64(nodePool.MaxCount), nodePool.Name, nodePool.Cluster, nodePool.ResourceGroup)
