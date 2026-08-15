@@ -63,6 +63,7 @@ func TestCollect(t *testing.T) {
 						CurrentOrchestratorVersion: "1.35.5",
 						NodeImageVersion:           "AKSUbuntu-2404gen2containerd-202607.29.0",
 						ScaleSetPriority:           "Spot",
+						AutoScalingEnabled:         true,
 					},
 					{
 						Name:          "empty",
@@ -80,6 +81,10 @@ aks_cluster_info{current_kubernetes_version="1.35.5",kubernetes_version="1.35.5"
 # HELP aks_cluster_provisioning_state The provisioning state of the cluster (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)
 # TYPE aks_cluster_provisioning_state gauge
 aks_cluster_provisioning_state{name="dev-de1",resource_group="dev-de1"} 1
+# HELP aks_nodepool_autoscaling_enabled Whether autoscaling is enabled for the node pool (0 - disabled, 1 - enabled)
+# TYPE aks_nodepool_autoscaling_enabled gauge
+aks_nodepool_autoscaling_enabled{cluster="dev-de1",name="empty",resource_group="dev-de1"} 0
+aks_nodepool_autoscaling_enabled{cluster="dev-de1",name="system",resource_group="dev-de1"} 1
 # HELP aks_nodepool_count The number of nodes in the node pool
 # TYPE aks_nodepool_count gauge
 aks_nodepool_count{cluster="dev-de1",name="empty",resource_group="dev-de1"} 0

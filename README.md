@@ -61,6 +61,11 @@ aks_nodepool_provisioning_state{cluster="stage-de1",name="zone1",resource_group=
 aks_nodepool_provisioning_state{cluster="stage-de1",name="zone2",resource_group="stage-de1"} 1
 aks_nodepool_provisioning_state{cluster="stage-de1",name="zone3",resource_group="stage-de1"} 1
 
+# HELP aks_nodepool_autoscaling_enabled Whether autoscaling is enabled for the node pool (0 - disabled, 1 - enabled)
+# TYPE aks_nodepool_autoscaling_enabled gauge
+aks_nodepool_autoscaling_enabled{cluster="dev-de1",name="system",resource_group="dev-de1"} 0
+aks_nodepool_autoscaling_enabled{cluster="dev-de1",name="zone1",resource_group="dev-de1"} 1
+
 # HELP aks_nodepool_count The number of nodes in the node pool
 # TYPE aks_nodepool_count gauge
 aks_nodepool_count{cluster="dev-de1",name="system",resource_group="dev-de1"} 3

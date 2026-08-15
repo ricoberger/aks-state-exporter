@@ -16,14 +16,15 @@ type Config struct {
 // StatsCollector collects the AKS state metrics and implements the
 // `prometheus.Collector` interface so it can be used as follows:
 type Exporter struct {
-	aksClient                 aks.Client
-	ClusterProvisioningState  *prometheus.Desc
-	ClusterInfo               *prometheus.Desc
-	NodePoolProvisioningState *prometheus.Desc
-	NodePoolInfo              *prometheus.Desc
-	NodePoolCount             *prometheus.Desc
-	NodePoolMinCount          *prometheus.Desc
-	NodePoolMaxCount          *prometheus.Desc
+	aksClient                  aks.Client
+	ClusterProvisioningState   *prometheus.Desc
+	ClusterInfo                *prometheus.Desc
+	NodePoolProvisioningState  *prometheus.Desc
+	NodePoolInfo               *prometheus.Desc
+	NodePoolCount              *prometheus.Desc
+	NodePoolMinCount           *prometheus.Desc
+	NodePoolMaxCount           *prometheus.Desc
+	NodePoolAutoScalingEnabled *prometheus.Desc
 }
 
 // New returns a new `Exporter` which can be passed to the
@@ -42,14 +43,15 @@ func New(config Config) (*Exporter, error) {
 // tests without requiring valid Azure credentials.
 func newExporter(aksClient aks.Client) *Exporter {
 	return &Exporter{
-		aksClient:                 aksClient,
-		ClusterProvisioningState:  prometheus.NewDesc("aks_cluster_provisioning_state", "The provisioning state of the cluster (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)", []string{"name", "resource_group"}, nil),
-		ClusterInfo:               prometheus.NewDesc("aks_cluster_info", "Information about the cluster as labels, the value is always 1", []string{"name", "resource_group", "location", "kubernetes_version", "current_kubernetes_version", "sku_tier", "power_state", "provisioning_state"}, nil),
-		NodePoolProvisioningState: prometheus.NewDesc("aks_nodepool_provisioning_state", "The provisioning state of the node pool (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)", []string{"name", "cluster", "resource_group"}, nil),
-		NodePoolInfo:              prometheus.NewDesc("aks_nodepool_info", "Information about the node pool as labels, the value is always 1", []string{"name", "cluster", "resource_group", "vm_size", "os_type", "os_sku", "mode", "orchestrator_version", "current_orchestrator_version", "node_image_version", "scale_set_priority", "provisioning_state"}, nil),
-		NodePoolCount:             prometheus.NewDesc("aks_nodepool_count", "The number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
-		NodePoolMinCount:          prometheus.NewDesc("aks_nodepool_min_count", "The minimum number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
-		NodePoolMaxCount:          prometheus.NewDesc("aks_nodepool_max_count", "The maximum number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
+		aksClient:                  aksClient,
+		ClusterProvisioningState:   prometheus.NewDesc("aks_cluster_provisioning_state", "The provisioning state of the cluster (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)", []string{"name", "resource_group"}, nil),
+		ClusterInfo:                prometheus.NewDesc("aks_cluster_info", "Information about the cluster as labels, the value is always 1", []string{"name", "resource_group", "location", "kubernetes_version", "current_kubernetes_version", "sku_tier", "power_state", "provisioning_state"}, nil),
+		NodePoolProvisioningState:  prometheus.NewDesc("aks_nodepool_provisioning_state", "The provisioning state of the node pool (0 - Unknown, 1 - Succeeded, 2 - Failed, 3 - Canceled, 4 - Creating, 5 - Updating, 6 - Deleting, 7 - Upgrading, 8 - UpgradingNodeImageVersion, 9 - ReconcilingClusterETCDCertificates)", []string{"name", "cluster", "resource_group"}, nil),
+		NodePoolInfo:               prometheus.NewDesc("aks_nodepool_info", "Information about the node pool as labels, the value is always 1", []string{"name", "cluster", "resource_group", "vm_size", "os_type", "os_sku", "mode", "orchestrator_version", "current_orchestrator_version", "node_image_version", "scale_set_priority", "provisioning_state"}, nil),
+		NodePoolCount:              prometheus.NewDesc("aks_nodepool_count", "The number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
+		NodePoolMinCount:           prometheus.NewDesc("aks_nodepool_min_count", "The minimum number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
+		NodePoolMaxCount:           prometheus.NewDesc("aks_nodepool_max_count", "The maximum number of nodes in the node pool", []string{"name", "cluster", "resource_group"}, nil),
+		NodePoolAutoScalingEnabled: prometheus.NewDesc("aks_nodepool_autoscaling_enabled", "Whether autoscaling is enabled for the node pool (0 - disabled, 1 - enabled)", []string{"name", "cluster", "resource_group"}, nil),
 	}
 }
 
@@ -65,6 +67,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- e.NodePoolCount
 	ch <- e.NodePoolMinCount
 	ch <- e.NodePoolMaxCount
+	ch <- e.NodePoolAutoScalingEnabled
 }
 
 // Collect is called by the Prometheus registry when collecting metrics. The
@@ -105,8 +108,17 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			ch <- prometheus.MustNewConstMetric(e.NodePoolCount, prometheus.GaugeValue, float64(nodePool.Count), nodePool.Name, nodePool.Cluster, nodePool.ResourceGroup)
 			ch <- prometheus.MustNewConstMetric(e.NodePoolMinCount, prometheus.GaugeValue, float64(nodePool.MinCount), nodePool.Name, nodePool.Cluster, nodePool.ResourceGroup)
 			ch <- prometheus.MustNewConstMetric(e.NodePoolMaxCount, prometheus.GaugeValue, float64(nodePool.MaxCount), nodePool.Name, nodePool.Cluster, nodePool.ResourceGroup)
+			ch <- prometheus.MustNewConstMetric(e.NodePoolAutoScalingEnabled, prometheus.GaugeValue, boolToFloat64(nodePool.AutoScalingEnabled), nodePool.Name, nodePool.Cluster, nodePool.ResourceGroup)
 		}
 	}
+}
+
+func boolToFloat64(value bool) float64 {
+	if value {
+		return 1
+	}
+
+	return 0
 }
 
 func provisioningStateToFloat64(state string) float64 {
