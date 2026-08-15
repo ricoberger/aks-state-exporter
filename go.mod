@@ -1,6 +1,6 @@
 module github.com/ricoberger/aks-state-exporter
 
-go 1.26.2
+go 1.26.6
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.22.0
